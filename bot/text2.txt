@@ -1,0 +1,19 @@
+import puppeteer from "puppeteer"
+
+(async () => {
+  // Launch the browser and open a new blank page
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  // Navigate the page to a URL
+  await page.goto('https://www.amazon.fr/');
+const products =await page.$$()
+for (const product of products){
+
+    const title= await page.evaluate(el=>el.innerText,product )
+}
+  // Set screen size
+  
+
+  await browser.close();
+})();
