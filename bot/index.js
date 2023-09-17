@@ -1,8 +1,9 @@
+import express from "express"
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Cluster } from 'puppeteer-cluster';
 import fs from 'fs'; // Import the fs module for file operations
-
+const app =express()
 puppeteer.use(StealthPlugin());
 
 puppeteer.launch({ headless: true }).then(async browser => {
@@ -86,3 +87,7 @@ puppeteer.launch({ headless: true }).then(async browser => {
     console.log("Work completed");
     await browser.close();
 });
+app.listen(8500,async()=>{ 
+  
+   console.log("hello")
+})
