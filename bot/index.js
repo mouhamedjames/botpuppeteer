@@ -89,7 +89,15 @@ puppeteer.launch({ headless: true }).then(async browser => {
     console.log("Work completed");
     await browser.close();
 });}
-app.listen(8500,async()=>{ await scraping()
+
+app.get("/api/",
+(req, res) => {
+    scraping()
+    res.send('Hello World!')
+  }
+
+)
+app.listen(8500,async()=>{ 
   
    console.log("hello")
 })
