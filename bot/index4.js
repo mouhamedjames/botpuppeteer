@@ -1,74 +1,91 @@
+import express from "express"
 import puppeteer from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { Cluster } from 'puppeteer-cluster';
+import fs from 'fs'; // Import the fs module for file operations
+
+async function scraping(){
 
 puppeteer.use(StealthPlugin());
 
-puppeteer.launch({ headless: true }).then(async (browser) => {
-  console.log('Running tests..');
-  const page = await browser.newPage();
-  await page.goto('https://www.propertyfinder.ae/en/search?c=2&ob=nd&page=2&rp=y&t=1', { waitUntil: 'load' });
+puppeteer.launch({ headless: true }).then(async browser => {
+    console.log('Running tests..');
+    const page = await browser.newPage();
+    await page.goto('https://www.drivenproperties.com/dubai/properties-for-rent', { timeout: 60000 });
 
-  // Function to scroll to the bottom of the page
-  async function scrollToBottom() {
-    await page.evaluate(() => {
-      window.scrollBy(0, 1000);
-    });
-  }
+    async function navigate(link) {
+        const page2 = await browser.newPage();
+        await page2.goto(link);
 
-  // Scroll to the bottom every second until the bottom is reached
-  let previousHeight = 0;
-  while (true) {
-    await scrollToBottom();
-    await page.waitForTimeout(1000); // Wait for 1 second
+        await page2.waitForSelector('main.dpx-main', { visible: true });
 
-    const currentHeight = await page.evaluate(() => {
-      return document.documentElement.scrollHeight;
-    });
+      
+      
+        const images  = await page2.evaluate(() => {
+            const elements = document.querySelectorAll('div.carousel-inner > div.carousel-item.dpx-property-status-tag > img');
+            return Array.from(elements).map(element => element.src);
+        });
 
-    // If the current height is the same as the previous height, we've reached the bottom
-    if (currentHeight === previousHeight) {
-      break;
+
+       
+        console.log(images);
+       
+        await page2.close();
+
+        // Return the scraped data as an object
+        return {
+          
+            images: images
+        };
     }
 
-    previousHeight = currentHeight;
-  }
+    const scrapedData = []; // Create an array to store scraped data
 
-  const productsHandles = await page.$$ (
-    "div.card-list__item > article.card"
-    );
-    let a =0
-for (const producthandle of productsHandles) {
-    
+    while (true) {
+        const productsHandles = await page.$$(
+            "div.dpx-listing-thumbnail.ux-listing-thumbnail.make-transition"
+        );
 
-    await page.waitForTimeout(1000)
-        let phone="number"
-        try {
-            try{
-    const revealButton = await producthandle.$('div.card-footer__buttons > button:first-child');
+        let a = 0;
+        for (const producthandle of productsHandles) {
+            try {
+                const link = await page.evaluate(
+                    (el) => el.querySelector("div.carousel-item.active > a").getAttribute("href"),
+                    producthandle
+                );
 
-    await   revealButton.click()
-    
-      console.log("clicled")}
-      catch (error) {console.log(producthandle)} 
-       await  page.waitForSelector('.button__phone--ltr', { visible: true })
-       a=a+1
-       console.log("waitfro selector  is good ")
-       try{ phone = await page. evaluate(
-            (el) => el.querySelector ('button > span').textContent,
-            producthandle
-            );  }
-            catch (error) {}  
-            
+                const data = await navigate(link);
 
-    console.log(phone)
-    console.log(a);}
-    catch (error) {}
-    
-}
+                scrapedData.push(data);
 
-await browser.close()
-  console.log("work")
+                a = a + 1;
+                console.log(link);
+                console.log(a);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        // Find and click the "Next Page" button
+        const nextPageButton = await page.$('div.dpx-pagination-controls > a[title="Next Page"]');
+        if (!nextPageButton) {
+            break; // Exit the loop if there is no "Next Page" button
+        }
+
+         await Promise.all([
+            page.click('div.dpx-pagination-controls > a[title="Next Page"]'),
+            page.waitForNavigation({ waitUntil: 'networkidle2' })
+          ]);
+        console.log("clikced");
+
+        // Save the scraped data to a JSON file after each iteration
+        fs.writeFileSync('scraped_data.json', JSON.stringify(scrapedData, null, 2), 'utf-8');
+    }
+
+    console.log("Work completed");
+    await browser.close();
+});}
 
 
-  console.log('All done, check the screenshot.');
-});
+    scraping()
+   

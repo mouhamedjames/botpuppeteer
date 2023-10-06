@@ -29,10 +29,17 @@ puppeteer.launch({ headless: true }).then(async browser => {
             const elements = document.querySelectorAll('ul.nav.nav-pills.nav-justified.dpx-listings-detail-facts > li.nav-item div');
             return Array.from(elements).map(element => element.textContent);
         });
+        const images  = await page2.evaluate(() => {
+            const elementss = document.querySelectorAll('div.carousel-inner > div.carousel-item.dpx-property-status-tag > img');
+            return Array.from(elementss).map(element => element.src);
+        });
+
+
         const numberphone = await page2.$eval('.dpx-agent-contact-buttons > a', (element) =>
             element.getAttribute("href"));
 
         console.log(title);
+        console.log(images);
         console.log(h1Elements);
         console.log(nameagnt);
         console.log(numberphone);
@@ -44,7 +51,8 @@ puppeteer.launch({ headless: true }).then(async browser => {
             title: title,
             nameagnt: nameagnt,
             facts: h1Elements,
-            phone: numberphone
+            phone: numberphone,
+            images: images
         };
     }
 
@@ -80,7 +88,12 @@ puppeteer.launch({ headless: true }).then(async browser => {
         if (!nextPageButton) {
             break; // Exit the loop if there is no "Next Page" button
         }
-        await nextPageButton.click();
+
+         await Promise.all([
+            page.click('div.dpx-pagination-controls > a[title="Next Page"]'),
+            page.waitForNavigation({ waitUntil: 'networkidle2' })
+          ]);
+        console.log("clikced");
 
         // Save the scraped data to a JSON file after each iteration
         fs.writeFileSync('scraped_data.json', JSON.stringify(scrapedData, null, 2), 'utf-8');
@@ -97,7 +110,7 @@ app.get("/api/",
   }
 
 )
-app.listen(8500,async()=>{ 
+app.listen(8501,async()=>{ 
   
    console.log("hello")
 })
