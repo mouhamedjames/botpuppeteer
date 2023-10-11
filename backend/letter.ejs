@@ -23,7 +23,7 @@
         }
 
         img {
-            max-width: 100%;
+            max-width: 50%;
             height: auto;
         }
     </style>
@@ -31,9 +31,10 @@
 <body>
     <div class="container">
         <% filter3.forEach((listing) => { %>
-            <div class="item">
+            <div class="item" >
                 <h1><%= listing.title %></h1>
-                <img src="<%= listing.images[0] %>" >
+           <a href="<%= listing.link %>">
+                <img src="<%= listing.images[0] %>"  ></a>
                 <h2><%= listing.name %></h2>
                 <p>Price: <%= listing.facts[0] %></p>
                 <p>Bedrooms: <%= listing.facts[1] %></p>

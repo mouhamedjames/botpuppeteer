@@ -4,6 +4,7 @@ const link = new mongoose.Schema(
     type: String,
     
   },
+  category:  {type:String,},
     rooms:  {type:String,},
     fromprice: { type: Number, },
     toprice: { type: Number, },

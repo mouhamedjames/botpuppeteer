@@ -4,7 +4,8 @@ import fs from "fs"
 import ejs from "ejs"
 import path from "path"
 export const navigate= async (req,res,next)=>{
-    const filePath = './scraped_data.json';
+    const filePath = './rent.json';
+    const filePath1 = './buy.json';
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -18,13 +19,26 @@ export const navigate= async (req,res,next)=>{
 try{
     
       
-      const jsonString = fs.readFileSync(filePath);
-         const file = JSON.parse(jsonString);
-         
+      
+  let jsonString=""
        
     const links= new Link(req.body)
-    await links.save()
+
     
+    await links.save()
+    if(req.body.category==="rent"){
+
+       jsonString = fs.readFileSync(filePath);
+     
+    }
+    else if (req.body.category==="buy"){
+
+       jsonString = fs.readFileSync(filePath1);
+     
+    }
+   
+   
+         const file = JSON.parse(jsonString);
 
     const filter =file.filter((map)=>map.title.includes(req.body.proprety)===true)
     const filter1 =filter.filter((map)=>map.facts[1].includes(req.body.rooms)===true)
